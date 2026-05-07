@@ -3,6 +3,7 @@ import os
 import flask
 import yaml
 import urllib3 as urllib
+from urllib.parse import urlparse
 
 app = flask.Flask(__name__)
 
@@ -11,10 +12,23 @@ app = flask.Flask(__name__)
 def index():
     version = flask.request.args.get("urllib_version")
     url = flask.request.args.get("url")
-    return fetch_website(version, url)
+    return fetch_website(url)
 
         
 CONFIG = {"API_KEY": "771df488714111d39138eb60df756e6b"}
+ALLOWED_URLS = {
+    "https://www.google.com",
+}
+
+
+def is_allowed_url(url):
+    if not url:
+        return False
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        return False
+    normalized = parsed.geturl()
+    return normalized in ALLOWED_URLS
 class Person(object):
     def __init__(self, name):
         self.name = name
@@ -26,11 +40,15 @@ def print_nametag(format_string, person):
 
 def fetch_website(url):
     # Fetch and print the requested URL
+    if not is_allowed_url(url):
+        return "URL not allowed", 400
     try: 
         http = urllib.PoolManager()
         r = http.request('GET', url)
+        return r.data
     except:
         print('Exception')
+        return "Request failed", 500
 
 
 def load_yaml(filename):
