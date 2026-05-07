@@ -17,18 +17,14 @@ def index():
         
 CONFIG = {"API_KEY": "771df488714111d39138eb60df756e6b"}
 ALLOWED_URLS = {
-    "https://www.google.com",
+    "google": "https://www.google.com",
 }
 
 
-def is_allowed_url(url):
-    if not url:
+def is_allowed_url(url_key):
+    if not url_key:
         return False
-    parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https"):
-        return False
-    normalized = parsed.geturl()
-    return normalized in ALLOWED_URLS
+    return url_key in ALLOWED_URLS
 class Person(object):
     def __init__(self, name):
         self.name = name
@@ -42,9 +38,10 @@ def fetch_website(url):
     # Fetch and print the requested URL
     if not is_allowed_url(url):
         return "URL not allowed", 400
+    resolved_url = ALLOWED_URLS[url]
     try: 
         http = urllib.PoolManager()
-        r = http.request('GET', url)
+        r = http.request('GET', resolved_url)
         return r.data
     except:
         print('Exception')
