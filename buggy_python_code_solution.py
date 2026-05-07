@@ -2,6 +2,7 @@ import sys
 import os
 import yaml
 import flask
+from urllib.parse import urlparse
 
 app = flask.Flask(__name__)
 
@@ -14,6 +15,7 @@ def index():
 
         
 CONFIG = {"API_KEY": "771df488714111d39138eb60df756e6b"}
+ALLOWED_FETCH_HOSTS = {"www.google.com", "example.com"}
 class Person(object):
     def __init__(self, name):
         self.name = name
@@ -29,8 +31,14 @@ def fetch_website(urllib_version, url):
         import urllib3 as urllib
     else:
         raise ValueError("Unsupported urllib version")
+
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError("Unsupported URL scheme")
+    if not parsed.hostname or parsed.hostname not in ALLOWED_FETCH_HOSTS:
+        raise ValueError("URL host is not allowlisted")
+
     # Fetch and print the requested URL
- 
     try: 
         http = urllib.PoolManager()
         r = http.request('GET', url)
